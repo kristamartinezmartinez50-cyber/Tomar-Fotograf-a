@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Foto por Voz</title>
+  <style>
+    body {
+      font-family: 'Georgia', serif;
+      text-align: center;
+      background: linear-gradient(135deg, #FFB6C1 0%, #FFC0CB 50%, #FFCCCB 100%);
+      padding: 20px;
+      min-height: 100vh;
+    }
+    .titulo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      border-radius: 15px;
+      border: 2px solid #D63384;
+      background: linear-gradient(45deg, #FF69B4, #FFB6C1);
+      box-shadow: 0 4px 15px rgba(255, 105, 180, 0.3);
+      color: white;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    }
+    .titulo:hover {
+      background: linear-gradient(45deg, #FF1493, #FF69B4);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 105, 180, 0.4);
+      transition: all 0.3s ease;
+    }
+    .titulo img {
+      width: 40px;
+      height: 40px;
+    }
+    video, canvas {
+      width: 80%;
+      max-width: 500px;
+      margin: 10px auto;
+      border: 3px solid #FF69B4;
+      border-radius: 15px;
+      display: block;
+      box-shadow: 0 8px 25px rgba(255, 105, 180, 0.3);
+    }
+    button {
+      padding: 12px 25px;
+      font-size: 16px;
+      cursor: pointer;
+      background: linear-gradient(45deg, #FF1493, #FF69B4);
+      border: none;
+      border-radius: 25px;
+      color: white;
+      font-weight: bold;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+      box-shadow: 0 4px 15px rgba(255, 20, 147, 0.3);
+      transition: all 0.3s ease;
+    }
+    button:hover {
+      background: linear-gradient(45deg, #C71585, #FF1493);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 20, 147, 0.4);
+    }
+    div {
+        background: linear-gradient(135deg, #FFCCCB, #FFB6C1);
+        padding: 15px;
+        border-radius: 15px;
+        box-shadow: 0 8px 25px rgba(255, 182, 193, 0.4);
+        border: 2px solid rgba(255, 105, 180, 0.5);
+    }
+  </style>
+</head>
+<body>
+  <div class="titulo">
+    <h1>Di "foto" para tomar una fotografía</h1>
+  </div>
+  <video id="video" autoplay playsinline></video>
+  <canvas id="canvas"></canvas>
+  <br>
+  <button id="descargar">Descargar Foto</button>
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const btnDescargar = document.getElementById('descargar');
+    navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+      .then((stream) => {
+        video.srcObject = stream;
+      })
+      .catch((err) => {
+        alert("No se pudo acceder a la cámara: " + err);
+      });
+    function tomarFoto() {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    }
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'es-ES';
+      recognition.continuous = true;
+      recognition.interimResults = false;
+      recognition.onresult = (event) => {
+        const transcript = event.results[event.results.length - 1][0].transcript.trim().toLowerCase();
+        console.log("Escuchado:", transcript);
+        if (transcript.includes("foto")) {
+          tomarFoto();
+        }
+      };
+      recognition.onerror = (event) => {
+        console.error("Error en el reconocimiento de voz:", event.error);
+      };
+      recognition.start();
+    } else {
+      alert("Tu navegador no soporta la Web Speech API");
+    }
+    btnDescargar.addEventListener("click", () => {
+      const link = document.createElement('a');
+      link.download = 'foto.png';
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    });
+  </script>
+</body>
+</html>
